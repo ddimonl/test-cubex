@@ -1,10 +1,8 @@
 const mongoose = require('mongoose');
-/*var uniqueValidator = require('mongoose-unique-validator');
-var crypto = require('crypto');
-var jwt = require('jsonwebtoken');
-var secret = require('../config').secret;*/
+const jwt = require('jsonwebtoken');
+const secret = require('../config').secret;
 
-var UserSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
     username: {
         type: String,
         lowercase: true,
@@ -21,9 +19,17 @@ var UserSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, "can't be blank"],
-        minlength: 6
+        //required: [true, "can't be blank"],
+        min: [6, "too short password"]
     }
 }, {timestamps: true});
+
+UserSchema.methods.generateJWT = function() {
+    return jwt.sign({
+        id: this._id,
+        username: this.username,
+    }, secret,  { expiresIn: '24h' });
+};
+
 
 mongoose.model('User', UserSchema);
