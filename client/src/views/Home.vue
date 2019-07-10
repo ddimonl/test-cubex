@@ -1,58 +1,34 @@
 <template>
     <div>
+        <span v-if="isAuthenticated">User: {{currentUser.username}}</span>
+        <button @click="logout">Logout</button>
         <button @click="runConverter">Perform transactions</button>
-        <span v-if="isProcessing">Processing...</span>
+        <span v-if="status">Processing...</span>
+        <div v-if="result">
+            <span v-for="(val, key) in result" :key="key">{{ key }}: {{ val }}<br></span>
+        </div>
     </div>
 </template>
 
 <script>
-    import config from '../common/config'
-    import Vue from 'vue'
+    import { mapGetters } from 'vuex'
+    import { LOGOUT } from '../store/actions.type'
+    import { RUN_CONVERTER } from "../store/actions.type";
 
     export default {
         name: "Home",
-        data() {
-            return {
-                transactions: [],
-                isProcessing: false
+        methods: {
+            logout() {
+                this.$store.dispatch(LOGOUT).then(() => {
+                    this.$router.push({ name: "Login" });
+                });
+            },
+            runConverter() {
+                this.$store.dispatch(RUN_CONVERTER);
             }
         },
-        methods: {
-            async runConverter() {
-                this.isProcessing = true;
-                const promiseArray = [];
-                let result;
-
-                for (let i = 0; i < config.transactionsCount; i++) {
-                    promiseArray.push(this.processTransaction());
-                }
-
-                try {
-                    await Promise.all(promiseArray);
-                    result = await Vue.axios.post(config.postTransactionUrl, { transactions: this.transactions })
-                } catch (err) {
-                    console.error(err);
-                }
-                this.isProcessing = false;
-                console.log("RESULT");
-                console.log(result);
-            },
-            async processTransaction() {
-                const transaction = await Vue.axios.get(config.getTransactionUrl);
-
-                const tDate = new Date(transaction.data.createdAt);
-
-                const exchangeUrl = `${config.exchangeServiceUrl}/${tDate.getFullYear()}-${tDate.getMonth() + 1}-${tDate.getDate()}?base=${config.convertingBase}`;
-
-                const exchangeResults = await Vue.axios.get(exchangeUrl);
-
-                const {createdAt, currency, amount, checksum} = transaction.data;
-
-                const convertedAmountRaw = amount / exchangeResults.data.rates[transaction.data.currency];
-                const convertedAmount = parseFloat(convertedAmountRaw.toFixed(4));
-
-                this.transactions.push({createdAt, currency, amount, convertedAmount, checksum});
-            }
+        computed: {
+            ...mapGetters(["isAuthenticated", "currentUser", "status", "result", "transactions"])
         }
     }
 </script>

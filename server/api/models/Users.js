@@ -6,7 +6,6 @@ const UserSchema = new mongoose.Schema({
     username: {
         type: String,
         lowercase: true,
-        unique: true,
         required: [true, "can't be blank"],
         match: [/^[a-zA-Z0-9]+$/, 'is invalid']
     },
@@ -31,5 +30,12 @@ UserSchema.methods.generateJWT = function() {
     }, secret,  { expiresIn: '24h' });
 };
 
+UserSchema.methods.toAuthJSON = function(){
+    return {
+        username: this.username,
+        email: this.email,
+        token: this.generateJWT()
+    };
+};
 
 mongoose.model('User', UserSchema);

@@ -7,27 +7,27 @@ module.exports.signupValidation = [
     check("user.email")
         .isEmail().withMessage("Incorrect email"),
     check("user.username")
-        .matches(/^[a-zA-Z0-9]+$/).withMessage('incorrect username'),
+        .matches(/^[a-zA-Z0-9]+$/).withMessage('Incorrect username'),
     check("user.password")
-        .isLength({ min: 6 }).withMessage('must be at least 6 chars long')
+        .isLength({ min: 6 }).withMessage('Password must be at least 6 chars long')
 ];
 
 module.exports.validate = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const err = errors.array();
-        res.send({ error: err })
+        res.status(409).send({ error: err })
     }
     next();
 };
 
 module.exports.checkUser = (req, res, next) => {
-    const { username, email } = req.body.user;
-    User.findOne({ $or: [ { username }, { email } ] })
+    const { email } = req.body.user;
+    User.findOne({ email })
         .then((user) => {
             //res.send(user);
             if(user) {
-                const err = {error : "User already exists. Change your email or username"};
+                const err = {error :[{ msg: "User already exists. Change your email", code: 409 }]};
                 res.status(409).send(err);
             }
             next();

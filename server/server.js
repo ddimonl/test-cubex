@@ -1,7 +1,7 @@
 const express = require('express');
 const PORT = process.env.PORT || 3000;
 
-require('./db/mongoose')
+require('./db/mongoose');
 
 const app = express();
 const router = require('./api/routes/index');

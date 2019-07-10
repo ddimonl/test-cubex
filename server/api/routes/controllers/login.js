@@ -5,13 +5,13 @@ const jwt = require('jsonwebtoken');
 const secret = require('../../config/index').secret;
 
 module.exports = (req, res, next) => {
-    const { email, username, password } = req.body.user;
+    const { email, password } = req.body.user;
 
-    User.findOne({ $or: [ { username }, { email } ] })
+    User.findOne({ email })
         .then((user) => {
             console.log(user);
             if(!user) {
-                const err = { error : "User not found"};
+                const err = { error : [{msg: "User not found", code: 404}]};
                 res.status(404).send(err);
             }
             bcrypt.compare(password, user.password)
@@ -27,8 +27,7 @@ module.exports = (req, res, next) => {
                             });
                         });
                     } else {
-                        const err = { error: "Wrong password" };
-                        //err.status = 400;
+                        const err = { error : [{msg: "Wrong password", code: 400}]};
                         res.status(400).send(err);
                     }
                 })
